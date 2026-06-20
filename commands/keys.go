@@ -83,6 +83,14 @@ func KeysCommand(req KeysRequest) *CommandResponse {
 		combos[i] = combo
 	}
 
+	if resp, handled := TryEidolonDispatch("io.keys", map[string]any{
+		"keys":     req.Keys,
+		"combos":   combos,
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))

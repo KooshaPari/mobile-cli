@@ -66,6 +66,12 @@ func webViewableDevice(deviceID string) (devices.WebViewable, error) {
 // ─── Commands ─────────────────────────────────────────────────
 
 func WebViewListCommand(req WebViewListRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("webview.list", map[string]any{
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	wv, err := webViewableDevice(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(err)
@@ -78,6 +84,14 @@ func WebViewListCommand(req WebViewListRequest) *CommandResponse {
 }
 
 func WebViewGotoCommand(req WebViewGotoRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("webview.goto", map[string]any{
+		"webViewId": req.WebViewID,
+		"url":       req.URL,
+		"deviceId":  req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	wv, err := webViewableDevice(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(err)
@@ -89,6 +103,13 @@ func WebViewGotoCommand(req WebViewGotoRequest) *CommandResponse {
 }
 
 func WebViewReloadCommand(req WebViewReloadRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("webview.reload", map[string]any{
+		"webViewId": req.WebViewID,
+		"deviceId":  req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	wv, err := webViewableDevice(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(err)
@@ -100,6 +121,13 @@ func WebViewReloadCommand(req WebViewReloadRequest) *CommandResponse {
 }
 
 func WebViewGoBackCommand(req WebViewRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("webview.back", map[string]any{
+		"webViewId": req.WebViewID,
+		"deviceId":  req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	wv, err := webViewableDevice(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(err)
@@ -111,6 +139,13 @@ func WebViewGoBackCommand(req WebViewRequest) *CommandResponse {
 }
 
 func WebViewGoForwardCommand(req WebViewRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("webview.forward", map[string]any{
+		"webViewId": req.WebViewID,
+		"deviceId":  req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	wv, err := webViewableDevice(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(err)
@@ -122,6 +157,13 @@ func WebViewGoForwardCommand(req WebViewRequest) *CommandResponse {
 }
 
 func WebViewContentCommand(req WebViewRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("webview.content", map[string]any{
+		"webViewId": req.WebViewID,
+		"deviceId":  req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	wv, err := webViewableDevice(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(err)
@@ -153,6 +195,15 @@ func WebViewQueryCommand(req WebViewQueryRequest) *CommandResponse {
 }
 
 func WebViewEvaluateCommand(req WebViewEvaluateRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("webview.evaluate", map[string]any{
+		"webViewId":  req.WebViewID,
+		"expression": req.Expression,
+		"args":       req.Args,
+		"deviceId":   req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	wv, err := webViewableDevice(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(err)
@@ -165,6 +216,15 @@ func WebViewEvaluateCommand(req WebViewEvaluateRequest) *CommandResponse {
 }
 
 func WebViewWaitForLoadStateCommand(req WebViewWaitForLoadStateRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("webview.wait", map[string]any{
+		"webViewId": req.WebViewID,
+		"state":     req.State,
+		"timeout":   req.Timeout,
+		"deviceId":  req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	wv, err := webViewableDevice(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(err)

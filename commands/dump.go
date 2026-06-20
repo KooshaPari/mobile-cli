@@ -19,6 +19,13 @@ type DumpUIResponse struct {
 
 // DumpUICommand starts an agent and dumps the UI tree from the specified device
 func DumpUICommand(req DumpUIRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("dump.ui", map[string]any{
+		"format":   req.Format,
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	// Find the target device
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {

@@ -12,6 +12,12 @@ type DeviceInfoResponse struct {
 }
 
 func InfoCommand(deviceID string) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("device.info", map[string]any{
+		"deviceId": deviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(deviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))

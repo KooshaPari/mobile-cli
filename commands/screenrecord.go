@@ -31,6 +31,14 @@ type ScreenRecordResponse struct {
 
 // ScreenRecordCommand records the device screen to an MP4 file.
 func ScreenRecordCommand(req ScreenRecordRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("screenrecord", map[string]any{
+		"outputPath": req.OutputPath,
+		"timeLimit":  req.TimeLimit,
+		"deviceId":   req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %w", err))

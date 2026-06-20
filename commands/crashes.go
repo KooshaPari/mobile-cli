@@ -3,6 +3,12 @@ package commands
 import "fmt"
 
 func CrashesListCommand(deviceID string) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("device.crashes.list", map[string]any{
+		"deviceId": deviceID,
+	}); handled {
+		return resp
+	}
+
 	device, err := FindDeviceOrAutoSelect(deviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %w", err))
@@ -17,6 +23,13 @@ func CrashesListCommand(deviceID string) *CommandResponse {
 }
 
 func CrashesGetCommand(deviceID string, id string) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("device.crashes.get", map[string]any{
+		"id":       id,
+		"deviceId": deviceID,
+	}); handled {
+		return resp
+	}
+
 	device, err := FindDeviceOrAutoSelect(deviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %w", err))
