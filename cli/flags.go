@@ -36,4 +36,12 @@ var (
 	// for webview wait command
 	webviewWaitState   string
 	webviewWaitTimeout int
+
+	// for EidolonStage integration. Empty means disabled (native only).
+	// When set, every device-targeting command first tries to dispatch the
+	// operation through the Eidolon MCP server at this endpoint and falls
+	// back to native iOS/Android on failure. A value starting with "http" is
+	// treated as a URL; any other value is treated as a binary path to spawn
+	// over stdio.
+	eidolonEndpoint string
 )

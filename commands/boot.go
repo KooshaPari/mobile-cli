@@ -11,6 +11,12 @@ type BootRequest struct {
 
 // BootCommand boots the specified simulator or emulator
 func BootCommand(req BootRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("device.boot", map[string]any{
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))
@@ -36,6 +42,12 @@ type ShutdownRequest struct {
 
 // ShutdownCommand shuts down the specified simulator or emulator
 func ShutdownCommand(req ShutdownRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("device.shutdown", map[string]any{
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))

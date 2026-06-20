@@ -441,6 +441,32 @@ mobilecli remote list-devices
 mobilecli remote release --device <device-id>
 ```
 
+## Eidolon integration 🪄
+
+Every device-targeting command in `mobilecli` (tap, swipe, screenshot, app launch, file I/O, webview, etc.) can optionally be dispatched through an [Eidolon](https://github.com/KooshaPari/agent-platform) MCP server before falling back to the native iOS/Android implementation. This lets a single Eidolon stage observe and arbitrate device operations across mobile, desktop and sandbox targets without changing the CLI surface.
+
+Pass the `--eidolon-endpoint` persistent flag to enable the integration. The flag value is interpreted as:
+
+- A path to a binary → `mobilecli` spawns the process per call and speaks JSON-RPC 2.0 over its stdin/stdout.
+- An `http://` or `https://` URL → `mobilecli` POSTs JSON-RPC requests to `{baseUrl}/call`.
+
+If the endpoint is unset (the default), every command runs as before using the native iOS/Android adapters.
+
+```bash
+# Stdio mode: spawn an Eidolon MCP server binary per call
+mobilecli --eidolon-endpoint /usr/local/bin/eidolon-mcp screenshot --device <id>
+
+# HTTP mode: dispatch to a running Eidolon MCP server
+mobilecli --eidolon-endpoint http://localhost:3100 io tap --device <id> 100,200
+
+# Without --eidolon-endpoint, behaviour is unchanged
+mobilecli screenshot --device <id>
+```
+
+On any failure (server unreachable, MCP-level error, timeout) the command transparently falls back to the native implementation, so leaving the flag set in scripts is safe. The on-device agent and all other iOS/Android-only code paths are unchanged.
+
+Run `mobilecli --help` to confirm the flag is recognised and `mobilecli --eidolon-endpoint X devices` to verify the dispatcher is wired (verbose mode: `-v`).
+
 ## HTTP API 🔌
 
 ***mobilecli*** provides an http interface for all the functionality that is available through command line. As a matter of fact, it is preferable to

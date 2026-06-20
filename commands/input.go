@@ -56,6 +56,14 @@ func TapCommand(req TapRequest) *CommandResponse {
 		return NewErrorResponse(fmt.Errorf("x and y coordinates must be non-negative, got x=%d, y=%d", req.X, req.Y))
 	}
 
+	if resp, handled := TryEidolonDispatch("io.tap", map[string]any{
+		"x":        req.X,
+		"y":        req.Y,
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))
@@ -82,6 +90,15 @@ func TapCommand(req TapRequest) *CommandResponse {
 func LongPressCommand(req LongPressRequest) *CommandResponse {
 	if req.X < 0 || req.Y < 0 {
 		return NewErrorResponse(fmt.Errorf("x and y coordinates must be non-negative, got x=%d, y=%d", req.X, req.Y))
+	}
+
+	if resp, handled := TryEidolonDispatch("io.longpress", map[string]any{
+		"x":        req.X,
+		"y":        req.Y,
+		"duration": req.Duration,
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
 	}
 
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
@@ -112,6 +129,13 @@ func TextCommand(req TextRequest) *CommandResponse {
 		return NewErrorResponse(fmt.Errorf("text is required"))
 	}
 
+	if resp, handled := TryEidolonDispatch("io.text", map[string]any{
+		"text":     req.Text,
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))
@@ -140,6 +164,13 @@ func ButtonCommand(req ButtonRequest) *CommandResponse {
 		return NewErrorResponse(fmt.Errorf("button name is required"))
 	}
 
+	if resp, handled := TryEidolonDispatch("io.button", map[string]any{
+		"button":   req.Button,
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))
@@ -166,6 +197,13 @@ func ButtonCommand(req ButtonRequest) *CommandResponse {
 func GestureCommand(req GestureRequest) *CommandResponse {
 	if len(req.Actions) == 0 {
 		return NewErrorResponse(fmt.Errorf("actions array is required and cannot be empty"))
+	}
+
+	if resp, handled := TryEidolonDispatch("io.gesture", map[string]any{
+		"actions":  req.Actions,
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
 	}
 
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
@@ -207,6 +245,16 @@ func GestureCommand(req GestureRequest) *CommandResponse {
 
 // SwipeCommand performs a swipe operation on the specified device
 func SwipeCommand(req SwipeRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("io.swipe", map[string]any{
+		"x1":       req.X1,
+		"y1":       req.Y1,
+		"x2":       req.X2,
+		"y2":       req.Y2,
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))

@@ -24,6 +24,12 @@ type OrientationResponse struct {
 
 // OrientationGetCommand gets the current device orientation
 func OrientationGetCommand(req OrientationGetRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("device.orientation.get", map[string]any{
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	device, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(err)
@@ -54,6 +60,13 @@ func OrientationSetCommand(req OrientationSetRequest) *CommandResponse {
 	// validate orientation value
 	if req.Orientation != "portrait" && req.Orientation != "landscape" {
 		return NewErrorResponse(fmt.Errorf("invalid orientation value '%s', must be 'portrait' or 'landscape'", req.Orientation))
+	}
+
+	if resp, handled := TryEidolonDispatch("device.orientation.set", map[string]any{
+		"orientation": req.Orientation,
+		"deviceId":    req.DeviceID,
+	}); handled {
+		return resp
 	}
 
 	device, err := FindDeviceOrAutoSelect(req.DeviceID)

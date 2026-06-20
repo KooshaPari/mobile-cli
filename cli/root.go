@@ -180,9 +180,10 @@ UTILITIES:
   mobilecli server start --listen localhost:12000 --cors
 
 COMMON FLAGS:
-  --device <id>        Device ID (from 'mobilecli devices' command)
-  -v, --verbose        Enable verbose output
-  --help               Show help for any command`,
+  --device <id>           Device ID (from 'mobilecli devices' command)
+  -v, --verbose           Enable verbose output
+  --eidolon-endpoint ...  Optional Eidolon MCP endpoint to dispatch through (fall back to native)
+  --help                  Show help for any command`,
 	CompletionOptions: cobra.CompletionOptions{
 		HiddenDefaultCmd: true,
 	},
@@ -207,6 +208,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
 	rootCmd.PersistentFlags().StringVar(&deviceId, "device", "", "Device ID (get from 'mobilecli devices' command)")
 	rootCmd.PersistentFlags().BoolVar(&insecureStorage, "insecure-storage", false, "store the auth token in a plaintext file instead of the OS keyring (for headless hosts with no keyring)")
+	rootCmd.PersistentFlags().StringVar(&eidolonEndpoint, "eidolon-endpoint", "", "optional Eidolon MCP endpoint to dispatch device operations through; fall back to native iOS/Android on failure (path = stdio binary, http(s)://... = HTTP)")
 }
 
 // Execute runs the root command

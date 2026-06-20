@@ -27,6 +27,14 @@ func FsPushCommand(req FsPushRequest) *CommandResponse {
 		return NewErrorResponse(fmt.Errorf("cannot stat local file %s: %w", req.LocalPath, err))
 	}
 
+	if resp, handled := TryEidolonDispatch("fs.push", map[string]any{
+		"localPath":  req.LocalPath,
+		"remotePath": req.RemotePath,
+		"deviceId":   req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	device, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %w", err))
@@ -55,6 +63,14 @@ func FsPullCommand(req FsPullRequest) *CommandResponse {
 		return NewErrorResponse(fmt.Errorf("local path is required"))
 	}
 
+	if resp, handled := TryEidolonDispatch("fs.pull", map[string]any{
+		"remotePath": req.RemotePath,
+		"localPath":  req.LocalPath,
+		"deviceId":   req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	device, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %w", err))
@@ -76,6 +92,14 @@ type FsListRequest struct {
 }
 
 func FsListCommand(req FsListRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("fs.list", map[string]any{
+		"bundleId":   req.BundleID,
+		"remotePath": req.RemotePath,
+		"deviceId":   req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	device, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %w", err))
@@ -99,6 +123,15 @@ type FsMkdirRequest struct {
 func FsMkdirCommand(req FsMkdirRequest) *CommandResponse {
 	if req.RemotePath == "" {
 		return NewErrorResponse(fmt.Errorf("remote path is required"))
+	}
+
+	if resp, handled := TryEidolonDispatch("fs.mkdir", map[string]any{
+		"bundleId":   req.BundleID,
+		"remotePath": req.RemotePath,
+		"parents":    req.Parents,
+		"deviceId":   req.DeviceID,
+	}); handled {
+		return resp
 	}
 
 	device, err := FindDeviceOrAutoSelect(req.DeviceID)
@@ -125,6 +158,15 @@ type FsRmRequest struct {
 func FsRmCommand(req FsRmRequest) *CommandResponse {
 	if req.RemotePath == "" {
 		return NewErrorResponse(fmt.Errorf("remote path is required"))
+	}
+
+	if resp, handled := TryEidolonDispatch("fs.rm", map[string]any{
+		"bundleId":   req.BundleID,
+		"remotePath": req.RemotePath,
+		"recursive":  req.Recursive,
+		"deviceId":   req.DeviceID,
+	}); handled {
+		return resp
 	}
 
 	device, err := FindDeviceOrAutoSelect(req.DeviceID)

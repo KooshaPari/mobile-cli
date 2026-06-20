@@ -11,6 +11,12 @@ type RebootRequest struct {
 
 // RebootCommand reboots the specified device
 func RebootCommand(req RebootRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("device.reboot", map[string]any{
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))

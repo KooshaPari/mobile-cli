@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"sync"
@@ -8,6 +9,24 @@ import (
 	"github.com/mobile-next/mobilecli/devices"
 	"github.com/mobile-next/mobilecli/utils"
 )
+
+// EidolonDispatcher is the minimal interface commands use to forward an
+// operation to the Eidolon MCP server. It is satisfied by the dispatcher
+// types in the root package (NullEidolonDispatcher / McpEidolonDispatcher).
+// When nil, no Eidolon dispatch is attempted and commands fall through to
+// the native iOS/Android implementation.
+type EidolonDispatcher interface {
+	Name() string
+	Dispatch(ctx context.Context, method string, params map[string]any) EidolonResultEnvelope
+}
+
+// EidolonResultEnvelope mirrors the JSON envelope produced by the Eidolon MCP
+// transport; commands translate it into a CommandResponse.
+type EidolonResultEnvelope struct {
+	OK    bool   `json:"ok"`
+	Data  any    `json:"data,omitempty"`
+	Error string `json:"error,omitempty"`
+}
 
 // CommandResponse represents a standardized response format for all commands
 type CommandResponse struct {
@@ -210,4 +229,57 @@ func getDeviceIDList(devices []devices.ControllableDevice) string {
 		ids = append(ids, d.ID())
 	}
 	return fmt.Sprintf("[%s]", strings.Join(ids, ", "))
+}
+
+// ─── Eidolon integration ──────────────────────────────────────────────────
+//
+// SetEidolonDispatcher installs the global Eidolon dispatcher that all
+// device-targeting commands consult before falling back to native iOS/Android.
+// It is wired from cli/root.go's PersistentPreRunE when --eidolon-endpoint
+// is set. A nil dispatcher disables Eidolon dispatch entirely.
+
+var (
+	eidolonMu       sync.RWMutex
+	eidolonDispatch EidolonDispatcher
+)
+
+// SetEidolonDispatcher installs (or clears, with nil) the global dispatcher.
+func SetEidolonDispatcher(d EidolonDispatcher) {
+	eidolonMu.Lock()
+	eidolonDispatch = d
+	eidolonMu.Unlock()
+}
+
+// GetEidolonDispatcher returns the current global dispatcher or nil if none.
+func GetEidolonDispatcher() EidolonDispatcher {
+	eidolonMu.RLock()
+	defer eidolonMu.RUnlock()
+	return eidolonDispatch
+}
+
+// TryEidolonDispatch attempts to forward a (method, params) call through the
+// configured Eidolon dispatcher. It returns (resp, true) when the dispatcher
+// handled the call successfully and the caller should return resp. It returns
+// (nil, false) when:
+//   - no dispatcher is configured (caller should run native path), or
+//   - the dispatcher itself failed (Eidolon unreachable, MCP error, etc.) —
+//     the caller should fall back to its native iOS/Android implementation.
+//
+// This is the single helper every device-targeting command calls before
+// touching the device adapters.
+func TryEidolonDispatch(method string, params map[string]any) (*CommandResponse, bool) {
+	d := GetEidolonDispatcher()
+	if d == nil {
+		return nil, false
+	}
+	utils.Verbose("eidolon: dispatching %s via %s", method, d.Name())
+	result := d.Dispatch(context.Background(), method, params)
+	if result.OK {
+		return NewSuccessResponse(result.Data), true
+	}
+	if result.Error == "" {
+		result.Error = "eidolon dispatch failed with no error message"
+	}
+	utils.Verbose("eidolon: %s failed (%s); falling back to native", method, result.Error)
+	return nil, false
 }

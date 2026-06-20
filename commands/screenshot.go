@@ -29,6 +29,15 @@ type ScreenshotResponse struct {
 
 // ScreenshotCommand takes a screenshot of the specified device
 func ScreenshotCommand(req ScreenshotRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("screenshot", map[string]any{
+		"format":     req.Format,
+		"quality":    req.Quality,
+		"outputPath": req.OutputPath,
+		"deviceId":   req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	// Find the target device
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {

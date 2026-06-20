@@ -18,6 +18,13 @@ func URLCommand(req URLRequest) *CommandResponse {
 		return NewErrorResponse(fmt.Errorf("URL is required"))
 	}
 
+	if resp, handled := TryEidolonDispatch("url", map[string]any{
+		"url":       req.URL,
+		"deviceId":  req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))

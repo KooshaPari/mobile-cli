@@ -23,6 +23,15 @@ func LaunchAppCommand(req AppRequest) *CommandResponse {
 		return NewErrorResponse(fmt.Errorf("bundle ID is required"))
 	}
 
+	if resp, handled := TryEidolonDispatch("apps.launch", map[string]any{
+		"bundleId": req.BundleID,
+		"locales":  req.Locales,
+		"activity": req.Activity,
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))
@@ -42,6 +51,13 @@ func LaunchAppCommand(req AppRequest) *CommandResponse {
 func TerminateAppCommand(req AppRequest) *CommandResponse {
 	if req.BundleID == "" {
 		return NewErrorResponse(fmt.Errorf("bundle ID is required"))
+	}
+
+	if resp, handled := TryEidolonDispatch("apps.terminate", map[string]any{
+		"bundleId": req.BundleID,
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
 	}
 
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
@@ -66,6 +82,12 @@ type ListAppsRequest struct {
 
 // ListAppsCommand lists installed apps on a device
 func ListAppsCommand(req ListAppsRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("apps.list", map[string]any{
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))
@@ -86,6 +108,12 @@ type ForegroundAppRequest struct {
 
 // ForegroundAppCommand gets the currently foreground app on a device
 func ForegroundAppCommand(req ForegroundAppRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("apps.foreground", map[string]any{
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %v", err))
@@ -125,6 +153,16 @@ type InstallAppResult struct {
 func InstallAppCommand(req InstallAppRequest) *CommandResponse {
 	if req.Path == "" {
 		return NewErrorResponse(fmt.Errorf("path is required"))
+	}
+
+	if resp, handled := TryEidolonDispatch("apps.install", map[string]any{
+		"path":               req.Path,
+		"forceResign":        req.ForceResign,
+		"provisioningProfile": req.ProvisioningProfile,
+		"signingIdentity":    req.SigningIdentity,
+		"deviceId":           req.DeviceID,
+	}); handled {
+		return resp
 	}
 
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)
@@ -183,6 +221,13 @@ func AppPathCommand(req AppPathRequest) *CommandResponse {
 		return NewErrorResponse(fmt.Errorf("bundle ID is required"))
 	}
 
+	if resp, handled := TryEidolonDispatch("apps.path", map[string]any{
+		"bundleId": req.BundleID,
+		"deviceId": req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	device, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(fmt.Errorf("error finding device: %w", err))
@@ -206,6 +251,13 @@ type UninstallAppRequest struct {
 func UninstallAppCommand(req UninstallAppRequest) *CommandResponse {
 	if req.PackageName == "" {
 		return NewErrorResponse(fmt.Errorf("package name is required"))
+	}
+
+	if resp, handled := TryEidolonDispatch("apps.uninstall", map[string]any{
+		"packageName": req.PackageName,
+		"deviceId":    req.DeviceID,
+	}); handled {
+		return resp
 	}
 
 	targetDevice, err := FindDeviceOrAutoSelect(req.DeviceID)

@@ -18,6 +18,13 @@ type ApplySettingsRequest struct {
 // ApplySettingsCommand applies the provided device settings. Settings that a
 // platform cannot honor are skipped with a debug log and never fail the call.
 func ApplySettingsCommand(req ApplySettingsRequest) *CommandResponse {
+	if resp, handled := TryEidolonDispatch("device.settings.apply", map[string]any{
+		"animations": req.Animations,
+		"deviceId":   req.DeviceID,
+	}); handled {
+		return resp
+	}
+
 	device, err := FindDeviceOrAutoSelect(req.DeviceID)
 	if err != nil {
 		return NewErrorResponse(err)
