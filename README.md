@@ -2,6 +2,8 @@
 
 A universal command-line tool for managing iOS and Android devices, simulators, emulators and apps from [Mobile Next](https://github.com/mobile-next/).
 
+[![AI slop inside](https://sladge.net/badge.svg)](https://sladge.net) [![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/KooshaPari/mobile-cli/total)](https://github.com/KooshaPari/mobile-cli/releases)
+
 <p align="center">
   <a href="https://github.com/mobile-next/mobilecli">
     <img src="https://img.shields.io/github/stars/mobile-next/mobilecli" alt="Mobile Next Stars" />
