@@ -19,8 +19,8 @@ func URLCommand(req URLRequest) *CommandResponse {
 	}
 
 	if resp, handled := TryEidolonDispatch("url", map[string]any{
-		"url":       req.URL,
-		"deviceId":  req.DeviceID,
+		"url":      req.URL,
+		"deviceId": req.DeviceID,
 	}); handled {
 		return resp
 	}
