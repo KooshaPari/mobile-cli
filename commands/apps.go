@@ -156,11 +156,11 @@ func InstallAppCommand(req InstallAppRequest) *CommandResponse {
 	}
 
 	if resp, handled := TryEidolonDispatch("apps.install", map[string]any{
-		"path":               req.Path,
-		"forceResign":        req.ForceResign,
+		"path":                req.Path,
+		"forceResign":         req.ForceResign,
 		"provisioningProfile": req.ProvisioningProfile,
-		"signingIdentity":    req.SigningIdentity,
-		"deviceId":           req.DeviceID,
+		"signingIdentity":     req.SigningIdentity,
+		"deviceId":            req.DeviceID,
 	}); handled {
 		return resp
 	}

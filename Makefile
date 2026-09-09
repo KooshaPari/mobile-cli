@@ -8,11 +8,11 @@ agents:
 
 build: agents
 	go mod tidy
-	CGO_ENABLED=0 go build -ldflags="-s -w"
+	CGO_ENABLED=0 go build -tags agents -ldflags="-s -w"
 
 build-cover: agents
 	go mod tidy
-	CGO_ENABLED=0 go build -ldflags="-s -w" -cover
+	CGO_ENABLED=0 go build -tags agents -ldflags="-s -w" -cover
 
 test:
 	go test ./... -v -race
