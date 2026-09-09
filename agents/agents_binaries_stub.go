@@ -1,3 +1,5 @@
+//go:build !agents
+
 package agents
 
 import _ "embed"
