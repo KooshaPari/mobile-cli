@@ -72,7 +72,7 @@ type IOSDevice struct {
 	OSVersion   string `json:"Version"`
 	ProductType string `json:"ProductType"`
 
-	mu                     sync.Mutex // protects fields below
+	mu                     *sync.Mutex // protects fields below (was sync.Mutex by-value; now pointer for non-Go-vet warning)
 	tunnelManager          *ios.TunnelManager
 	wdaClient              *wda.WdaClient
 	mjpegClient            *mjpeg.WdaMjpegClient
@@ -83,31 +83,31 @@ type IOSDevice struct {
 	portForwarderAvc       *ios.PortForwarder // devicekit h264 stream forwarder
 }
 
-func (d IOSDevice) ID() string {
+func (d *IOSDevice) ID() string {
 	return d.Udid
 }
 
-func (d IOSDevice) Name() string {
+func (d *IOSDevice) Name() string {
 	return d.DeviceName
 }
 
-func (d IOSDevice) Version() string {
+func (d *IOSDevice) Version() string {
 	return d.OSVersion
 }
 
-func (d IOSDevice) Platform() string {
+func (d *IOSDevice) Platform() string {
 	return "ios"
 }
 
-func (d IOSDevice) DeviceType() string {
+func (d *IOSDevice) DeviceType() string {
 	return "real"
 }
 
-func (d IOSDevice) State() string {
+func (d *IOSDevice) State() string {
 	return "online"
 }
 
-func getDeviceInfo(deviceEntry goios.DeviceEntry) (IOSDevice, error) {
+func getDeviceInfo(deviceEntry goios.DeviceEntry) (*IOSDevice, error) {
 	log.SetLevel(log.WarnLevel)
 
 	udid := deviceEntry.Properties.SerialNumber
@@ -123,7 +123,7 @@ func getDeviceInfo(deviceEntry goios.DeviceEntry) (IOSDevice, error) {
 	} else {
 		allValues, err := goios.GetValues(deviceEntry)
 		if err != nil {
-			return IOSDevice{}, fmt.Errorf("failed getting values for device %s: %w", udid, err)
+			return &IOSDevice{}, fmt.Errorf("failed getting values for device %s: %w", udid, err)
 		}
 
 		deviceName = allValues.Value.DeviceName
@@ -138,7 +138,7 @@ func getDeviceInfo(deviceEntry goios.DeviceEntry) (IOSDevice, error) {
 		})
 	}
 
-	device := IOSDevice{
+	device := &IOSDevice{
 		Udid:        udid,
 		DeviceName:  deviceName,
 		OSVersion:   osVersion,
@@ -147,7 +147,7 @@ func getDeviceInfo(deviceEntry goios.DeviceEntry) (IOSDevice, error) {
 
 	tunnelManager, err := ios.NewTunnelManager(udid)
 	if err != nil {
-		return IOSDevice{}, fmt.Errorf("failed to create tunnel manager for device %s: %w", udid, err)
+		return &IOSDevice{}, fmt.Errorf("failed to create tunnel manager for device %s: %w", udid, err)
 	}
 
 	device.tunnelManager = tunnelManager
@@ -156,19 +156,19 @@ func getDeviceInfo(deviceEntry goios.DeviceEntry) (IOSDevice, error) {
 	return device, nil
 }
 
-func ListIOSDevices() ([]IOSDevice, error) {
+func ListIOSDevices() ([]*IOSDevice, error) {
 	log.SetLevel(log.WarnLevel)
 
 	deviceList, err := goios.ListDevices()
 	if err != nil {
-		return []IOSDevice{}, fmt.Errorf("failed getting device list: %w", err)
+		return []*IOSDevice{}, fmt.Errorf("failed getting device list: %w", err)
 	}
 
-	devices := make([]IOSDevice, len(deviceList.DeviceList))
+	devices := make([]*IOSDevice, len(deviceList.DeviceList))
 	for i, deviceEntry := range deviceList.DeviceList {
 		device, err := getDeviceInfo(deviceEntry)
 		if err != nil {
-			return []IOSDevice{}, fmt.Errorf("failed to get device info: %w", err)
+			return []*IOSDevice{}, fmt.Errorf("failed to get device info: %w", err)
 		}
 		devices[i] = device
 	}
@@ -176,11 +176,11 @@ func ListIOSDevices() ([]IOSDevice, error) {
 	return devices, nil
 }
 
-func (d IOSDevice) TakeScreenshot() ([]byte, error) {
+func (d *IOSDevice) TakeScreenshot() ([]byte, error) {
 	return d.wdaClient.TakeScreenshot()
 }
 
-func (d IOSDevice) Reboot() error {
+func (d *IOSDevice) Reboot() error {
 	log.SetLevel(log.WarnLevel)
 
 	// ensure tunnel is running for iOS 17+
@@ -203,27 +203,27 @@ func (d IOSDevice) Reboot() error {
 	return nil
 }
 
-func (d IOSDevice) Boot() error {
+func (d *IOSDevice) Boot() error {
 	return fmt.Errorf("boot is not supported for real iOS devices")
 }
 
-func (d IOSDevice) Shutdown() error {
+func (d *IOSDevice) Shutdown() error {
 	return fmt.Errorf("shutdown is not supported for real iOS devices")
 }
 
-func (d IOSDevice) Tap(x, y int) error {
+func (d *IOSDevice) Tap(x, y int) error {
 	return d.wdaClient.Tap(x, y)
 }
 
-func (d IOSDevice) LongPress(x, y, duration int) error {
+func (d *IOSDevice) LongPress(x, y, duration int) error {
 	return d.wdaClient.LongPress(x, y, duration)
 }
 
-func (d IOSDevice) Swipe(x1, y1, x2, y2 int) error {
+func (d *IOSDevice) Swipe(x1, y1, x2, y2 int) error {
 	return d.wdaClient.Swipe(x1, y1, x2, y2)
 }
 
-func (d IOSDevice) Gesture(actions []wda.TapAction) error {
+func (d *IOSDevice) Gesture(actions []wda.TapAction) error {
 	return d.wdaClient.Gesture(actions)
 }
 
@@ -235,7 +235,7 @@ type Tunnel struct {
 	UserspaceTunPort int    `json:"userspaceTunPort"`
 }
 
-func (d IOSDevice) ListTunnels() ([]Tunnel, error) {
+func (d *IOSDevice) ListTunnels() ([]Tunnel, error) {
 	log.SetLevel(log.WarnLevel)
 
 	if d.tunnelManager == nil {
@@ -681,7 +681,7 @@ func deviceWithRsdProvider(device goios.DeviceEntry, udid string, address string
 }
 
 // getEnhancedDevice gets device info enhanced with tunnel/RSD information for iOS 17+
-func (d IOSDevice) getEnhancedDevice() (goios.DeviceEntry, error) {
+func (d *IOSDevice) getEnhancedDevice() (goios.DeviceEntry, error) {
 	const userspaceTunnelHost = "localhost"
 
 	device, err := goios.GetDevice(d.Udid)
@@ -723,7 +723,7 @@ func (d IOSDevice) getEnhancedDevice() (goios.DeviceEntry, error) {
 	return device, nil
 }
 
-func (d IOSDevice) LaunchApp(bundleID string, launchOpts LaunchOptions) error {
+func (d *IOSDevice) LaunchApp(bundleID string, launchOpts LaunchOptions) error {
 	if bundleID == "" {
 		return fmt.Errorf("bundleID cannot be empty")
 	}
@@ -768,7 +768,7 @@ func (d IOSDevice) LaunchApp(bundleID string, launchOpts LaunchOptions) error {
 	return nil
 }
 
-func (d IOSDevice) TerminateApp(bundleID string) error {
+func (d *IOSDevice) TerminateApp(bundleID string) error {
 	if bundleID == "" {
 		return fmt.Errorf("bundleID cannot be empty")
 	}
@@ -839,15 +839,15 @@ func (d IOSDevice) TerminateApp(bundleID string) error {
 	return fmt.Errorf("process of %s not found", bundleID)
 }
 
-func (d IOSDevice) SendKeys(text string) error {
+func (d *IOSDevice) SendKeys(text string) error {
 	return d.wdaClient.SendKeys(text)
 }
 
-func (d IOSDevice) PressKeys(combos []KeyCombo) error {
+func (d *IOSDevice) PressKeys(combos []KeyCombo) error {
 	return d.wdaClient.PressKeys(toWdaKeyCombos(combos))
 }
 
-func (d IOSDevice) OpenURL(url string) error {
+func (d *IOSDevice) OpenURL(url string) error {
 	return d.wdaClient.OpenURL(url)
 }
 
@@ -924,7 +924,7 @@ func (d *IOSDevice) GetForegroundApp() (*ForegroundAppInfo, error) {
 	}, nil
 }
 
-func (d IOSDevice) Info() (*FullDeviceInfo, error) {
+func (d *IOSDevice) Info() (*FullDeviceInfo, error) {
 	wdaSize, err := d.wdaClient.GetWindowSize()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get window size from WDA: %w", err)
@@ -1073,15 +1073,15 @@ func (d *IOSDevice) StartScreenCapture(config ScreenCaptureConfig) error {
 	return d.mjpegClient.StartScreenCapture(config.Format, config.OnData)
 }
 
-func (d IOSDevice) DumpSource() ([]ScreenElement, error) {
+func (d *IOSDevice) DumpSource() ([]ScreenElement, error) {
 	return d.wdaClient.GetSourceElements()
 }
 
-func (d IOSDevice) DumpSourceRaw() (any, error) {
+func (d *IOSDevice) DumpSourceRaw() (any, error) {
 	return d.wdaClient.GetSourceRaw()
 }
 
-func (d IOSDevice) InstallApp(path string) error {
+func (d *IOSDevice) InstallApp(path string) error {
 	log.SetLevel(log.WarnLevel)
 
 	// ensure tunnel is running for iOS 17+
@@ -1109,7 +1109,7 @@ func (d IOSDevice) InstallApp(path string) error {
 	return nil
 }
 
-func (d IOSDevice) UninstallApp(packageName string) (*InstalledAppInfo, error) {
+func (d *IOSDevice) UninstallApp(packageName string) (*InstalledAppInfo, error) {
 	log.SetLevel(log.WarnLevel)
 
 	// ensure tunnel is running for iOS 17+
@@ -1142,12 +1142,12 @@ func (d IOSDevice) UninstallApp(packageName string) (*InstalledAppInfo, error) {
 }
 
 // GetOrientation gets the current device orientation
-func (d IOSDevice) GetOrientation() (string, error) {
+func (d *IOSDevice) GetOrientation() (string, error) {
 	return d.wdaClient.GetOrientation()
 }
 
 // SetOrientation sets the device orientation
-func (d IOSDevice) SetOrientation(orientation string) error {
+func (d *IOSDevice) SetOrientation(orientation string) error {
 	return d.wdaClient.SetOrientation(orientation)
 }
 
